@@ -15,6 +15,7 @@ abstract class Parser[T]:
 
 object Parsers:
   val todo = ??? // put the extensions here..
+
 class BasicParser(chars: Set[Char]) extends Parser[Char]:
   override def parse(t: Char): Boolean = chars.contains(t)
   override def end: Boolean = true
@@ -31,11 +32,21 @@ class NonEmptyParser(chars: Set[Char])
     with NonEmpty[Char]
 
 trait NotTwoConsecutive[T] extends Parser[T]:
-  val todo = ???
-// ???
+  var lastParsedSymbol: Option[T] = None
+  private[this] var symbolParsedTwice: Boolean = false
+  abstract override def parse(t: T): Boolean =
+    if lastParsedSymbol.isEmpty || lastParsedSymbol.get != t then
+      lastParsedSymbol = Some(t)
+      super.parse(t)
+      true
+    else
+      symbolParsedTwice = true
+      false
+  abstract override def end: Boolean = !symbolParsedTwice && super.end
 
 class NotTwoConsecutiveParser(chars: Set[Char])
-    extends BasicParser(chars) // with ????
+    extends BasicParser(chars)
+    with NotTwoConsecutive[Char]
 
 @main def checkParsers(): Unit =
   def parser = new BasicParser(Set('a', 'b', 'c'))
